@@ -1,146 +1,125 @@
-import conf from '../../conf/conf.js';
-import { Client, ID, Databases, Storage, Query } from "appwrite";
+// src/appwrite/config.js (Now powered by Firebase)
+import { db, storage } from '../firebase/config';
+import { 
+    collection, 
+    addDoc, 
+    updateDoc, 
+    deleteDoc, 
+    getDoc, 
+    getDocs,
+    doc,
+    query,
+    where
+} from 'firebase/firestore';
+import { 
+    ref, 
+    uploadBytes, 
+    getDownloadURL, 
+    deleteObject 
+} from 'firebase/storage';
+import { v4 as uuidv4 } from 'uuid';
 
-export class Service{
-    client = new Client();
-    databases;
-    bucket;
-    
-    constructor(){
-        this.client
-        .setEndpoint(conf.appwriteUrl)
-        .setProject(conf.appwriteProjectId);
-        this.databases = new Databases(this.client);
-        this.bucket = new Storage(this.client);
-    }
-
+export class Service {
+    // --- Firestore (Database) Methods ---
     async createPost({title, slug, content, featuredImage, status, userId}){
         try {
-            return await this.databases.createDocument(
-                conf.appwriteDatabaseId,
-                conf.appwriteCollectionId,
-                slug,
-                {
-                    title,
-                    content,
-                    featuredImage,
-                    status,
-                    userId,
-                    
-                }
-            )
+            // Note: `slug` is now just a field, not the document ID
+            return await addDoc(collection(db, "posts"), {
+                title,
+                slug, // You might still want this for user-friendly URLs
+                content,
+                featuredImage, // This will be an object { url, path }
+                status,
+                userId,
+                createdAt: new Date(),
+            });
         } catch (error) {
-            console.log("Appwrite serive :: createPost :: error", error);
+            console.log("Firebase :: createPost :: error", error);
         }
     }
 
-    async updatePost(slug, {title, content, featuredImage, status}){
+    async updatePost(postId, data){
         try {
-            return await this.databases.updateDocument(
-                conf.appwriteDatabaseId,
-                conf.appwriteCollectionId,
-                slug,
-                {
-                    title,
-                    content,
-                    featuredImage,
-                    status,
-
-                }
-            )
+            const postRef = doc(db, "posts", postId);
+            // We then pass this entire `data` object directly to Firestore's updateDoc.
+            // Now it will update ANY fields that are present in the object.
+            return await updateDoc(postRef, data);
         } catch (error) {
-            console.log("Appwrite serive :: updatePost :: error", error);
+            console.log("Firebase service :: updatePost :: error", error);
         }
     }
 
-    async deletePost(slug){
+    async deletePost(postId){
         try {
-            await this.databases.deleteDocument(
-                conf.appwriteDatabaseId,
-                conf.appwriteCollectionId,
-                slug
-            
-            )
-            return true
+            await deleteDoc(doc(db, "posts", postId));
+            return true;
         } catch (error) {
-            console.log("Appwrite serive :: deletePost :: error", error);
-            return false
+            console.log("Firebase :: deletePost :: error", error);
+            return false;
         }
     }
 
-    async getPost(slug){
+    async getPost(postId){
         try {
-            return await this.databases.getDocument(
-                conf.appwriteDatabaseId,
-                conf.appwriteCollectionId,
-                slug
-            
-            )
+            const docSnap = await getDoc(doc(db, "posts", postId));
+            if (docSnap.exists()) {
+                return { id: docSnap.id, ...docSnap.data() };
+            }
+            return null;
         } catch (error) {
-            console.log("Appwrite serive :: getPost :: error", error);
-            return false
+            console.log("Firebase :: getPost :: error", error);
+            return null;
         }
     }
 
-    async getPosts(queries = [Query.equal("status", "active")]){
+    async getPosts(queries = []){ // Pass Firebase queries here
         try {
-            return await this.databases.listDocuments(
-                conf.appwriteDatabaseId,
-                conf.appwriteCollectionId,
-                queries,
-                
-
-            )
+            const q = query(collection(db, "posts"), ...queries);
+            const querySnapshot = await getDocs(q);
+            const posts = [];
+            querySnapshot.forEach((doc) => {
+                posts.push({ id: doc.id, ...doc.data() });
+            });
+            return { documents: posts }; // Match Appwrite's response structure
         } catch (error) {
-            console.log("Appwrite serive :: getPosts :: error", error);
-            return false
+            console.log("Firebase :: getPosts :: error", error);
+            return { documents: [] };
         }
     }
 
-    // file upload service
-
+    // --- File Storage Methods ---
     async uploadFile(file){
         try {
-            return await this.bucket.createFile(
-                conf.appwriteBucketId,
-                ID.unique(),
-                file
-            )
+            const uniqueFileName = `images/${uuidv4()}-${file.name}`;
+            const storageRef = ref(storage, uniqueFileName);
+            await uploadBytes(storageRef, file);
+            const url = await getDownloadURL(storageRef);
+            return { url, path: uniqueFileName }; // Return URL and Path
         } catch (error) {
-            console.log("Appwrite serive :: uploadFile :: error", error);
-            return false
+            console.log("Firebase :: uploadFile :: error", error);
+            return null;
         }
     }
 
-    async deleteFile(fileId){
+    async deleteFile(filePath){
         try {
-            await this.bucket.deleteFile(
-                conf.appwriteBucketId,
-                fileId
-            )
-            return true
+            const fileRef = ref(storage, filePath);
+            await deleteObject(fileRef);
+            return true;
         } catch (error) {
-            console.log("Appwrite serive :: deleteFile :: error", error);
-            return false
+            console.log("Firebase :: deleteFile :: error", error);
+            return false;
         }
     }
-
-    getFilePreview(fileId){
-        
-       try {
-         return this.bucket.getFilePreview(
-             conf.appwriteBucketId,
-             fileId
-         )
-       } catch (error) {
-            console.log("Appwrite serive :: getFilePreview :: error", error);
-            return false
-            
-        
-       }
+    
+    // This function is no longer needed with Firebase, but we keep it
+    // so you don't have to change your components immediately. It does nothing.
+    getFilePreview(fileObject){
+       // With Firebase, we store the direct URL.
+       // The `fileObject` itself is now the URL.
+       return fileObject;
     }
 }
 
-
-const service = new Service()
-export default service
+const service = new Service();
+export default service;

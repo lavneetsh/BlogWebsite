@@ -1,28 +1,22 @@
-import conf from '../../conf/conf.js';
-import { Client, Account, ID } from "appwrite";
-
+import { auth } from '../firebase/config';
+import { 
+    createUserWithEmailAndPassword, 
+    signInWithEmailAndPassword, 
+    signOut, 
+    onAuthStateChanged,
+    updateProfile
+} from "firebase/auth";
 
 export class AuthService {
-    client = new Client();
-    account;
-
-    constructor() {
-        this.client
-            .setEndpoint(conf.appwriteUrl)
-            .setProject(conf.appwriteProjectId);
-        this.account = new Account(this.client);
-            
-    }
-
     async createAccount({email, password, name}) {
         try {
-            const userAccount = await this.account.create(ID.unique(), email, password, name);
-            if (userAccount) {
-                // call another method
-                return this.login({email, password});
-            } else {
-               return  userAccount;
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            if (userCredential.user) {
+                // This updates the user's profile in Firebase
+                await updateProfile(userCredential.user, { displayName: name });
             }
+            // We return the created user, but do NOT log them in here.
+            return userCredential;
         } catch (error) {
             throw error;
         }
@@ -30,33 +24,30 @@ export class AuthService {
 
     async login({email, password}) {
         try {
-            return await this.account.createEmailPasswordSession(email, password);
+            return await signInWithEmailAndPassword(auth, email, password);
         } catch (error) {
+            console.error("Firebase Login Error:", error.message);
             throw error;
         }
     }
 
     async getCurrentUser() {
-        try {
-            return await this.account.get();
-        } catch (error) {
-            console.log("Appwrite serive :: getCurrentUser :: error", error);
-        }
-
-        return null;
+        return new Promise((resolve) => {
+            const unsubscribe = onAuthStateChanged(auth, (user) => {
+                unsubscribe();
+                resolve(user);
+});
+        });
     }
 
     async logout() {
-
         try {
-            await this.account.deleteSessions();
+            await signOut(auth);
         } catch (error) {
-            console.log("Appwrite serive :: logout :: error", error);
+            console.log("Firebase :: logout :: error", error);
         }
     }
 }
 
 const authService = new AuthService();
-
-export default authService
-
+export default authService;

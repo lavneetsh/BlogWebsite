@@ -2,9 +2,9 @@ import React from 'react';
 import { Editor } from '@tinymce/tinymce-react';
 import { Controller } from 'react-hook-form';
 
-export default function RTE({ name, control, label, defaultValue = "" }) {
-  // Access the API key from the environment variables
-  const apiKey = import.meta.env.VITE_TINYMCE_API_KEY;
+// Add `rules` to the props
+export default function RTE({ name, control, label, defaultValue = "", rules = {} }) {
+  const apiKey = String(import.meta.env.VITE_TINYMCE_API_KEY);
 
   return (
     <div className='w-full'>
@@ -13,41 +13,19 @@ export default function RTE({ name, control, label, defaultValue = "" }) {
       <Controller
         name={name || "content"}
         control={control}
-        render={({ field: { onChange } }) => (
+        // Pass the validation rules to the Controller
+        rules={rules}
+        render={({ field: { onChange, value } }) => (
           <Editor
-            apiKey={apiKey} // <-- ADD THIS LINE
+            apiKey={apiKey}
             initialValue={defaultValue}
-            init={{
-              height: 500,
-              menubar: true,
-              plugins: [
-                "advlist",
-                "autolink",
-                "lists",
-                "link",
-                "image",
-                "charmap",
-                "preview",
-                "anchor",
-                "searchreplace",
-                "visualblocks",
-                "code",
-                "fullscreen",
-                "insertdatetime",
-                "media",
-                "table",
-                "help",
-                "wordcount"
-              ],
-              toolbar:
-                "undo redo | blocks | image | bold italic forecolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help",
-              content_style: "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }"
-            }}
+            init={{ /* ... your init settings ... */ }}
             onEditorChange={onChange}
+            // The `value` prop helps keep the editor in sync
+            value={value}
           />
         )}
       />
-
     </div>
   )
 }
