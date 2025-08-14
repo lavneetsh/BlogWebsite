@@ -79,7 +79,7 @@ function Login() {
                     />
                     <Button
                         type="submit"
-                        className="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold transition-colors duration-200"
+                        className="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold transition-colors duration-200 cursor-pointer"
                     >
                         Sign in
                     </Button>
