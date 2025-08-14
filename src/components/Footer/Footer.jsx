@@ -19,7 +19,7 @@ function Footer() {
                         </div>
                         <div>
                             <p className="text-sm text-slate-400">
-                                &copy; Copyright {currentYear}. All Rights Reserved by YourBlog.
+                                &copy; Copyright {currentYear}. All Rights Reserved by ShareThoughts.
                             </p>
                         </div>
                     </div>
