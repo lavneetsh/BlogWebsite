@@ -5,6 +5,7 @@ import {Button, Input, Logo} from "./index"
 import {useDispatch} from "react-redux"
 import authService from "../appwrite/auth"
 import {useForm} from "react-hook-form"
+import { getFriendlyAuthErrorMessage } from '../utils/errorUtils'
 
 function Login() {
     const navigate = useNavigate()
@@ -24,7 +25,8 @@ function Login() {
             }
             }
         } catch (error) {
-            setError(error.message)
+            const friendlyMessage = getFriendlyAuthErrorMessage(error);
+        setError(friendlyMessage);
         }
     }
 

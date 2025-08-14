@@ -5,6 +5,7 @@ import { login } from '../store/authSlice';
 import { useDispatch } from 'react-redux';
 import { Button, Input, Logo } from '../components'; // Import the building blocks
 import { useForm } from 'react-hook-form';
+import { getFriendlyAuthErrorMessage } from '../utils/errorUtils'; // Utility for error messages
 
 // Note: We are no longer importing the component `Signup` from `../components`.
 // This page component IS the signup page.
@@ -30,7 +31,8 @@ function SignupPage() { // Renamed to avoid confusion
                 }
             }
         } catch (error) {
-            setError(error.message);
+            const friendlyMessage = getFriendlyAuthErrorMessage(error);
+        setError(friendlyMessage);
         }
     };
 

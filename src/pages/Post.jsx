@@ -66,7 +66,7 @@ export default function Post() {
                 {/* Author Control Panel */}
                 {isAuthor && (
                     <div className="border-y border-slate-300 py-4 mb-6 flex items-center gap-x-6">
-                        <p className="text-sm font-medium text-slate-600">Author Controls:</p>
+                        <p className="text-sm font-medium text-slate-600">POST:</p>
                         <Link to={`/edit-post/${post.id}`}>
                             <Button className="bg-green-600 hover:bg-green-700 w-auto px-6">
                                 Edit
