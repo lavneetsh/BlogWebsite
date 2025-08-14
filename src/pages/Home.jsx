@@ -34,7 +34,7 @@ function Home() {
     if (authStatus === false) {
         const heroStyle = {
             // ** IMPORTANT: Replace this with the path to your own background image **
-            backgroundImage: `url('/path-to-your-background-image.jpg')`
+            backgroundImage: `url('../../public/home-image.jpg')`
         };
 
         return (
