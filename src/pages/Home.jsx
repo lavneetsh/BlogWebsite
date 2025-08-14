@@ -32,10 +32,9 @@ function Home() {
 
     // Case 1: The user is logged out. Show the inviting hero section.
     if (authStatus === false) {
-        const heroStyle = {
-            // ** IMPORTANT: Replace this with the path to your own background image **
-            backgroundImage: `url('../../public/home-image.jpg')`
-        };
+      const heroStyle = {
+    backgroundImage: `url('/home-image.jpg')`
+};
 
         return (
             <div
